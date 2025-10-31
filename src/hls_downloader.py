@@ -420,7 +420,7 @@ def download_images_end_to_end(
     bands: Optional[List[str]] = None,
     cloud_coverage: float = 10.0,
     number_of_images: int = 3,
-    buffer_distance: int = 10000,
+    buffer_distance: int = 5000,
     scale: int = 30,
     crs: str = 'EPSG:4326',
     max_expansion_days: int = 30

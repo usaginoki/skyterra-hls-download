@@ -5,6 +5,9 @@ Area: 1 km to each side (2km x 2km)
 Period: April to September 2025
 Process: Download → Merge → Crop
 """
+import sys
+import os
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.hls_downloader import download_images_end_to_end
 from src.image_utils import merge_temporal_images, crop_image
@@ -36,7 +39,7 @@ images = download_images_end_to_end(
     output_directory='./test_output',
     number_of_images=3,
     cloud_coverage=30,
-    buffer_distance=1000  # 1km to each side
+    buffer_distance=3000  # 3km to each side
 )
 
 print(f"\nDownloaded {len(images)} images:")
@@ -82,7 +85,7 @@ if images:
     # Crop to exactly 1km to each side from center point
     cropped_file = crop_image(
         input_path=merged_file,
-        coordinates=((longitude, latitude), 1000, 1000),  # Center point, 1km x and y offsets
+        coordinates=((longitude, latitude), 2000, 2000),  # Center point, 2km x and y offsets
         output_path='./test_output/final_cropped.tif',
         coordinate_type='point_offset'
     )
