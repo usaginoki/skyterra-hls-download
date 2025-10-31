@@ -1,0 +1,25 @@
+[project]
+name = "skyterra-hls-download"
+version = "0.1.0"
+description = "NASA HLS satellite imagery downloader using Google Earth Engine"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "earthengine-api>=1.6.14",
+    "matplotlib>=3.10.7",
+    "rasterio>=1.4.3",
+    "requests>=2.31.0",
+    "seaborn>=0.13.2",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-cov>=4.1.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
+]
