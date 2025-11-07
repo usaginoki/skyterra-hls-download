@@ -15,6 +15,7 @@ A Python library for searching, downloading, and processing NASA's Harmonized La
 ### Processing & Analysis
 - **Temporal Merging** - Stack multiple temporal images into a single multi-band GeoTIFF
 - **Spatial Cropping** - Extract regions using bounding boxes or point+distance
+- **RGB Extraction** - Generate true-color visualizations from multi-temporal data
 - **Band Ordering** - Automatic sorting of bands to standard order (B2, B3, B4, B8A, B11, B12)
 - **Smart Labeling** - Temporal band labels (t0_B2, t1_B2, etc.) with metadata preservation
 
@@ -130,7 +131,7 @@ cropped = crop_image(
 
 ```python
 from src.hls_downloader import download_images_end_to_end
-from src.image_utils import merge_temporal_images, crop_image
+from src.image_utils import merge_temporal_images, crop_image, extract_rgb_images
 
 # Step 1: Download 3 temporal images
 print("Downloading temporal images...")
@@ -158,7 +159,16 @@ cropped = crop_image(
     coordinate_type='bbox'
 )
 
-print(f"Final output: {cropped}")
+# Step 4: Extract RGB visualizations
+print("Extracting RGB images...")
+rgb_files = extract_rgb_images(
+    input_path=cropped,
+    output_directory='./rgb_output',
+    scale_factor=3.0
+)
+
+print(f"Analysis-ready file: {cropped}")
+print(f"Visualizations: {len(rgb_files)} RGB images in ./rgb_output/")
 print("Ready for analysis!")
 ```
 
@@ -350,6 +360,70 @@ array, transform, crs = crop_image(
 - Preserves all bands and band descriptions
 - Maintains spatial reference and metadata
 
+#### `extract_rgb_images()`
+
+Extract true-color RGB visualizations from multi-temporal multi-band imagery.
+
+```python
+from src.image_utils import extract_rgb_images
+
+# Extract RGB from multi-temporal image
+rgb_files = extract_rgb_images(
+    input_path='merged_temporal.tif',
+    output_directory='./rgb_output',
+    scale_factor=3.0,  # optional
+    bands_per_temporal=6  # optional
+)
+
+# Returns list of PNG file paths
+print(f"Created {len(rgb_files)} RGB images")
+# ['./rgb_output/t0_rgb.png', './rgb_output/t1_rgb.png', './rgb_output/t2_rgb.png']
+```
+
+**Parameters:**
+- `input_path`: Path to input multi-band GeoTIFF
+- `output_directory`: Directory to save RGB PNG images
+- `scale_factor`: Brightness multiplier for visualization (default: 3.0)
+- `bands_per_temporal`: Number of bands per temporal step (default: 6)
+
+**Returns:** List[str] - Paths to created RGB PNG files
+
+**Band Extraction:**
+- Extracts B2 (Blue), B3 (Green), B4 (Red) from each temporal step
+- For HLS images: B2=band 1, B3=band 2, B4=band 3 within each temporal slice
+- Automatically detects number of temporal steps from total band count
+
+**Output Files:**
+- Single temporal image (6 bands) → `{basename}_rgb.png`
+- Multi-temporal image (18 bands) → `t0_rgb.png`, `t1_rgb.png`, `t2_rgb.png`
+
+**Scaling:**
+- Raw reflectance values (0-1) are multiplied by `scale_factor`
+- Values are clipped to 0-1 range, then converted to 8-bit (0-255)
+- Default scale_factor=3.0 works well for typical HLS surface reflectance
+
+**Example Use Cases:**
+```python
+# Visualize change over time
+rgb_files = extract_rgb_images('temporal_stack.tif', './rgb')
+# View t0_rgb.png, t1_rgb.png, t2_rgb.png to see temporal changes
+
+# Adjust brightness for darker images
+rgb_files = extract_rgb_images(
+    'dark_image.tif',
+    './rgb',
+    scale_factor=5.0  # Brighter
+)
+
+# Process single-date image
+rgb_files = extract_rgb_images('single_date.tif', './rgb')
+# Creates: single_date_rgb.png
+```
+
+**Validation:**
+- Total bands must be divisible by `bands_per_temporal`
+- Raises `ValueError` if band count mismatch
+
 ## Band Information
 
 ### Default Bands
@@ -501,11 +575,13 @@ skyterra-hls-download/
 │   └── image_utils.py           # Processing utilities
 ├── tests/
 │   ├── __init__.py
-│   ├── test_hls_downloader.py   # Download tests
-│   └── test_image_utils.py      # Processing tests
+│   ├── test_hls_downloader.py   # Download tests (21 tests)
+│   ├── test_image_utils.py      # Processing tests (20 tests)
+│   └── test_workflow.py         # Complete workflow test
 ├── pyproject.toml               # Project configuration
 ├── uv.lock                      # Dependency lock file
-└── README.md                    # This file
+├── README.md                    # User documentation
+└── CLAUDE.md                    # Development documentation
 ```
 
 ## Dependencies
@@ -514,6 +590,7 @@ skyterra-hls-download/
 - `earthengine-api>=1.6.14` - Google Earth Engine Python API
 - `requests>=2.31.0` - HTTP library for downloads
 - `rasterio>=1.4.3` - GeoTIFF I/O and processing
+- `pillow>=10.0.0` - RGB image creation and export
 - `numpy` - Array operations
 - `seaborn>=0.13.2` - Statistical visualization
 

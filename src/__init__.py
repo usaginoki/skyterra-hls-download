@@ -15,6 +15,7 @@ from .hls_downloader import (
 from .image_utils import (
     merge_temporal_images,
     crop_image,
+    extract_rgb_images,
 )
 
 __all__ = [
@@ -26,6 +27,7 @@ __all__ = [
     # Utility functions
     'merge_temporal_images',
     'crop_image',
+    'extract_rgb_images',
 ]
 
 __version__ = '0.1.0'

@@ -314,3 +314,165 @@ def crop_image(
 
     print(f"  ✓ Saved cropped image to {output_path}")
     return output_path
+
+
+def extract_rgb_images(
+    input_path: str,
+    output_directory: str,
+    scale_factor: float = 3.0,
+    bands_per_temporal: int = 6
+) -> List[str]:
+    """
+    Extract RGB images (B4-Red, B3-Green, B2-Blue) for each temporal step.
+
+    Analyzes the input image to determine the number of temporal steps based on
+    the total band count, then extracts and saves RGB composites for each time period.
+
+    Parameters:
+    -----------
+    input_path : str
+        Path to input multi-band GeoTIFF
+    output_directory : str
+        Directory to save RGB images
+    scale_factor : float
+        Multiplier for brightness adjustment (default: 3.0)
+    bands_per_temporal : int
+        Number of bands per temporal step (default: 6 for HLS standard bands)
+
+    Returns:
+    --------
+    List[str] : List of paths to created RGB images
+
+    Raises:
+    -------
+    ValueError
+        If band count is not divisible by bands_per_temporal
+    FileNotFoundError
+        If input file does not exist
+
+    Example:
+    --------
+    >>> # Extract RGB from merged temporal image with 18 bands
+    >>> rgb_files = extract_rgb_images(
+    ...     'merged_temporal.tif',
+    ...     './rgb_output'
+    ... )
+    >>> # Creates: t0_rgb.png, t1_rgb.png, t2_rgb.png
+
+    Notes:
+    ------
+    - B2 (Blue), B3 (Green), B4 (Red) are expected at positions 0, 1, 2
+      within each temporal step
+    - Output images are scaled and contrast-stretched for visualization
+    - Single temporal images (6 bands) will create one RGB output
+    - Multi-temporal images create separate RGB for each time period
+    """
+    if not os.path.exists(input_path):
+        raise FileNotFoundError(f"Input file not found: {input_path}")
+
+    # Create output directory
+    os.makedirs(output_directory, exist_ok=True)
+
+    print(f"Extracting RGB images from: {input_path}")
+    print(f"Output directory: {output_directory}")
+    print("-" * 70)
+
+    # Open the image and analyze bands
+    with rasterio.open(input_path) as src:
+        total_bands = src.count
+        width = src.width
+        height = src.height
+
+        # Calculate number of temporal steps
+        if total_bands % bands_per_temporal != 0:
+            raise ValueError(
+                f"Total bands ({total_bands}) is not divisible by "
+                f"bands_per_temporal ({bands_per_temporal}). "
+                f"Cannot determine number of temporal steps."
+            )
+
+        num_temporal = total_bands // bands_per_temporal
+
+        print(f"Image analysis:")
+        print(f"  Total bands: {total_bands}")
+        print(f"  Bands per temporal step: {bands_per_temporal}")
+        print(f"  Number of temporal steps: {num_temporal}")
+        print(f"  Dimensions: {width} × {height} pixels")
+        print()
+
+        rgb_files = []
+
+        # Extract RGB for each temporal step
+        for temporal_idx in range(num_temporal):
+            # Calculate band indices for this temporal step
+            # Band layout: t0_B2, t0_B3, t0_B4, t0_B8A, t0_B11, t0_B12, t1_B2, ...
+            base_idx = temporal_idx * bands_per_temporal
+
+            # HLS bands: B2 (Blue), B3 (Green), B4 (Red)
+            # Rasterio uses 1-based indexing
+            blue_idx = base_idx + 1   # B2
+            green_idx = base_idx + 2  # B3
+            red_idx = base_idx + 3    # B4
+
+            print(f"Processing temporal step {temporal_idx} (t{temporal_idx})...")
+            print(f"  Reading bands: R=B4 (band {red_idx}), G=B3 (band {green_idx}), B=B2 (band {blue_idx})")
+
+            # Read the RGB bands
+            red = src.read(red_idx).astype(np.float32)
+            green = src.read(green_idx).astype(np.float32)
+            blue = src.read(blue_idx).astype(np.float32)
+
+            # Get band descriptions for metadata
+            red_desc = src.descriptions[red_idx - 1] if src.descriptions[red_idx - 1] else f"Band {red_idx}"
+            green_desc = src.descriptions[green_idx - 1] if src.descriptions[green_idx - 1] else f"Band {green_idx}"
+            blue_desc = src.descriptions[blue_idx - 1] if src.descriptions[blue_idx - 1] else f"Band {blue_idx}"
+
+            # Apply scaling and contrast stretching
+            def scale_band(band, scale=scale_factor):
+                """Scale and clip band values to 0-255 range"""
+                # Apply scaling factor
+                scaled = band * scale
+
+                # Clip to valid range
+                scaled = np.clip(scaled, 0, 1)
+
+                # Convert to 8-bit
+                return (scaled * 255).astype(np.uint8)
+
+            red_scaled = scale_band(red)
+            green_scaled = scale_band(green)
+            blue_scaled = scale_band(blue)
+
+            print(f"  Value ranges (after scaling):")
+            print(f"    Red:   min={red_scaled.min()}, max={red_scaled.max()}, mean={red_scaled.mean():.1f}")
+            print(f"    Green: min={green_scaled.min()}, max={green_scaled.max()}, mean={green_scaled.mean():.1f}")
+            print(f"    Blue:  min={blue_scaled.min()}, max={blue_scaled.max()}, mean={blue_scaled.mean():.1f}")
+
+            # Stack into RGB array
+            rgb_array = np.stack([red_scaled, green_scaled, blue_scaled], axis=-1)
+
+            # Create PIL Image
+            rgb_image = Image.fromarray(rgb_array, mode='RGB')
+
+            # Generate output filename
+            base_name = os.path.splitext(os.path.basename(input_path))[0]
+            if num_temporal > 1:
+                output_filename = f"t{temporal_idx}_rgb.png"
+            else:
+                output_filename = f"{base_name}_rgb.png"
+
+            output_path = os.path.join(output_directory, output_filename)
+
+            # Save the image
+            rgb_image.save(output_path, 'PNG')
+            rgb_files.append(output_path)
+
+            print(f"  ✓ Saved: {output_path}")
+            print(f"    Bands: {red_desc} (R), {green_desc} (G), {blue_desc} (B)")
+            print()
+
+    print("=" * 70)
+    print(f"RGB extraction complete! Created {len(rgb_files)} image(s)")
+    print("=" * 70)
+
+    return rgb_files

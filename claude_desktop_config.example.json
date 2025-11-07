@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "skyterra-hls": {
+      "command": "uv",
+      "args": [
+        "run",
+        "python",
+        "/ABSOLUTE/PATH/TO/skyterra-hls-download/skyterra_hls_mcp.py"
+      ],
+      "env": {}
+    }
+  }
+}

@@ -10,7 +10,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from src.hls_downloader import download_images_end_to_end
-from src.image_utils import merge_temporal_images, crop_image
+from src.image_utils import merge_temporal_images, crop_image, extract_rgb_images
 
 # Convert coordinates from DMS to decimal degrees
 # 51°04'50"N = 51 + 4/60 + 50/3600 = 51.0805556°N
@@ -100,6 +100,22 @@ if images:
         print(f"  Bounds:")
         print(f"    Center: {(src.bounds.left + src.bounds.right)/2:.6f}°E, {(src.bounds.bottom + src.bounds.top)/2:.6f}°N")
 
+    # Step 4: Extract RGB images
+    print("\n" + "=" * 70)
+    print("STEP 4: Extracting RGB images...")
+    print("-" * 70)
+
+    rgb_files = extract_rgb_images(
+        input_path=cropped_file,
+        output_directory='./test_output/rgb',
+        scale_factor=3.0
+    )
+
+    print(f"\nRGB files created:")
+    for idx, rgb_file in enumerate(rgb_files, 1):
+        size_kb = os.path.getsize(rgb_file) / 1024
+        print(f"  {idx}. {os.path.basename(rgb_file)} ({size_kb:.1f} KB)")
+
     print("\n" + "=" * 70)
     print("SUCCESS! Complete workflow finished.")
     print("=" * 70)
@@ -107,8 +123,11 @@ if images:
     print(f"  1. Individual images: {len(images)} files in ./test_output/")
     print(f"  2. Merged file: ./test_output/merged_temporal.tif ({os.path.getsize(merged_file) / (1024 * 1024):.2f} MB)")
     print(f"  3. Cropped file: ./test_output/final_cropped.tif ({os.path.getsize(cropped_file) / (1024 * 1024):.2f} MB)")
-    print(f"\nWorkflow: Download → Merge → Crop ✓")
-    print(f"Final file ready for analysis: {cropped_file}")
+    print(f"  4. RGB images: {len(rgb_files)} files in ./test_output/rgb/")
+    print(f"\nWorkflow: Download → Merge → Crop → Extract RGB ✓")
+    print(f"Final files ready for analysis:")
+    print(f"  - Multi-band: {cropped_file}")
+    print(f"  - RGB visualizations: ./test_output/rgb/")
 else:
     print("\n" + "=" * 70)
     print("WARNING: No images found for the specified criteria")
