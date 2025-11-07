@@ -14,7 +14,7 @@ from enum import Enum
 from datetime import datetime
 
 from pydantic import BaseModel, Field, field_validator, ConfigDict
-from mcp.server.fastmcp import FastMCP
+from fastmcp import FastMCP
 
 # Import the HLS downloader library
 from src import hls_downloader, image_utils

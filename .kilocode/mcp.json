@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "skyterra-hls": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/home/wan/Workspace/SkyTerra/skyterra-crops-mcp/skyterra-hls-download",
+        "run",
+        "skyterra_hls_mcp.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/home/wan/Workspace/SkyTerra/skyterra-crops-mcp/skyterra-hls-download"
+      }
+    }
+  }
+}

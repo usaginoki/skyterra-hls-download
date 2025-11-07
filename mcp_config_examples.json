@@ -1,0 +1,84 @@
+{
+  "// EXAMPLE 1: Using uv (recommended)": "",
+  "mcpServers_uv": {
+    "skyterra-hls": {
+      "command": "uv",
+      "args": [
+        "--directory",
+        "/home/wan/Workspace/SkyTerra/skyterra-crops-mcp/skyterra-hls-download",
+        "run",
+        "skyterra_hls_mcp.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/home/wan/Workspace/SkyTerra/skyterra-crops-mcp/skyterra-hls-download"
+      }
+    }
+  },
+
+  "// EXAMPLE 2: Using Python directly": "",
+  "mcpServers_python": {
+    "skyterra-hls": {
+      "command": "python",
+      "args": [
+        "/home/wan/Workspace/SkyTerra/skyterra-crops-mcp/skyterra-hls-download/skyterra_hls_mcp.py"
+      ],
+      "env": {
+        "PYTHONPATH": "/home/wan/Workspace/SkyTerra/skyterra-crops-mcp/skyterra-hls-download"
+      }
+    }
+  },
+
+  "// EXAMPLE 3: Using python3 with virtual environment": "",
+  "mcpServers_venv": {
+    "skyterra-hls": {
+      "command": "/home/wan/Workspace/SkyTerra/skyterra-crops-mcp/skyterra-hls-download/.venv/bin/python",
+      "args": [
+        "skyterra_hls_mcp.py"
+      ],
+      "cwd": "/home/wan/Workspace/SkyTerra/skyterra-crops-mcp/skyterra-hls-download",
+      "env": {
+        "PYTHONPATH": "/home/wan/Workspace/SkyTerra/skyterra-crops-mcp/skyterra-hls-download"
+      }
+    }
+  },
+
+  "// EXAMPLE 4: For Claude Desktop on macOS/Linux": "",
+  "// Location: ~/.config/claude/claude_desktop_config.json (Linux)": "",
+  "// Location: ~/Library/Application Support/Claude/claude_desktop_config.json (macOS)": "",
+  "claude_desktop_config": {
+    "mcpServers": {
+      "skyterra-hls": {
+        "command": "uv",
+        "args": [
+          "--directory",
+          "/absolute/path/to/skyterra-hls-download",
+          "run",
+          "skyterra_hls_mcp.py"
+        ]
+      }
+    }
+  },
+
+  "// EXAMPLE 5: For Claude Desktop on Windows": "",
+  "// Location: %APPDATA%\\Claude\\claude_desktop_config.json": "",
+  "claude_desktop_config_windows": {
+    "mcpServers": {
+      "skyterra-hls": {
+        "command": "uv",
+        "args": [
+          "--directory",
+          "C:\\Users\\YourUsername\\path\\to\\skyterra-hls-download",
+          "run",
+          "skyterra_hls_mcp.py"
+        ]
+      }
+    }
+  },
+
+  "// NOTES": "",
+  "// 1. Replace all paths with your actual installation directory": "",
+  "// 2. Ensure Earth Engine is authenticated: run 'earthengine authenticate' first": "",
+  "// 3. Make sure all dependencies are installed: uv sync or pip install -e .": "",
+  "// 4. Remove all comment lines (starting with //) before using in actual config": "",
+  "// 5. The server provides 6 tools: hls_find_images, hls_download_images, hls_merge_temporal, hls_crop_image, hls_extract_rgb, hls_full_pipeline": ""
+}
